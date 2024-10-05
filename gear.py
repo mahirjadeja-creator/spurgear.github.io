@@ -1,40 +1,11 @@
-import numpy as np # type: ignore
-import pandas as pd # type: ignore
-from sklearn.model_selection import train_test_split # type: ignore
-from sklearn.ensemble import RandomForestRegressor # type: ignore
-from sklearn.metrics import mean_squared_error # type: ignore
-
-# Sample dataset (hypothetical features and target variable)
-data = {
-    'gear_diameter': np.random.uniform(50, 500, 1000),  # in mm
-    'num_teeth': np.random.randint(20, 200, 1000),
-    'material_strength': np.random.uniform(200, 800, 1000),  # in MPa
-    'speed': np.random.uniform(100, 3000, 1000),  # in RPM
-    'load': np.random.uniform(10, 1000, 1000),  # in N
-    'torque': np.random.uniform(10, 500, 1000),  # in Nm
-    'temperature': np.random.uniform(20, 200, 1000),  # in Celsius
-    'wear_rate': np.random.uniform(0.01, 0.2, 1000)  # target variable (hypothetical)
-}
-
-# Convert to DataFrame
-df = pd.DataFrame(data)
-
-# Features (X) and target (y)
-X = df.drop(columns=['wear_rate'])
-y = df['wear_rate']
-# New real-time data for a specific gear
-new_gear_data = np.array([[200, 50, 600, 1500, 300, 200, 100]])  # Example input
-
 import streamlit as st
 import numpy as np
-import joblib  # For loading a trained model
-import pandas as pd
+import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
+from matplotlib.animation import FuncAnimation
 
-# Function to simulate wear rate prediction (replace with your model)
+# Function to simulate wear rate prediction
 def predict_wear_rate(radius, num_teeth, material_strength, speed, load, torque, temperature):
-    # Placeholder for a trained model prediction
-    # This function should load your model and return a prediction
-    # Example using a mock formula: wear_rate = f(radius, num_teeth, ...) (replace with actual model)
     return (
         0.1 * radius +
         0.05 * num_teeth +
@@ -45,10 +16,40 @@ def predict_wear_rate(radius, num_teeth, material_strength, speed, load, torque,
         0.1 * temperature
     )
 
-# Streamlit layout
-st.title("Wear Rate Prediction for Spur Gears")
+# Function to draw a spur gear
+def draw_gear(ax, radius, thickness, num_teeth, angle):
+    theta = np.linspace(0, 2 * np.pi, num_teeth + 1)
+    x_outer = radius * np.cos(theta + angle)
+    y_outer = radius * np.sin(theta + angle)
 
-# User inputs
+    tooth_height = 0.2
+    for i in range(num_teeth):
+        x_tooth = [
+            x_outer[i], 
+            x_outer[i] * 0.8, 
+            x_outer[i] * 0.8, 
+            x_outer[i], 
+            x_outer[i] * 1.1,
+            x_outer[i] * 1.1,
+            x_outer[i],
+        ]
+        y_tooth = [
+            y_outer[i], 
+            y_outer[i], 
+            y_outer[i] + tooth_height, 
+            y_outer[i] + tooth_height, 
+            y_outer[i],
+            y_outer[i] - tooth_height,
+            y_outer[i] - tooth_height,
+        ]
+        ax.plot(x_tooth, y_tooth, zs=[0, 0, 0, 0, 0, 0, 0], color='black')
+
+    ax.bar3d(x_outer, y_outer, 0, 0.1, 0.1, thickness, shade=True, color='gray')
+
+# Streamlit layout
+st.title("Animated Spur Gears Based on Predicted Wear Rate")
+
+# User inputs for gear parameters
 radius = st.slider("Gear Radius (mm)", 1, 500, 200)
 num_teeth = st.slider("Number of Teeth", 5, 200, 50)
 material_strength = st.slider("Material Strength (MPa)", 200, 800, 600)
@@ -62,19 +63,31 @@ if st.button("Predict Wear Rate"):
     wear_rate = predict_wear_rate(radius, num_teeth, material_strength, speed, load, torque, temperature)
     st.success(f"Predicted Wear Rate: {wear_rate:.4f} (arbitrary units)")
 
-# Split the data into training and test sets
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+    # Setup the figure and 3D axis for animation
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection='3d')
 
-# Create and train the model
-model = RandomForestRegressor(n_estimators=100, random_state=42)
-model.fit(X_train, y_train)
+    # Animation function
+    def animate(frame):
+        ax.clear()
+        angle = frame * (wear_rate / 10)  # Adjust rotation speed based on wear rate
+        draw_gear(ax, radius, 1.0, num_teeth, angle)  # Thickness fixed for simplicity
+        ax.set_title("3D Animation of Spur Gears")
+        ax.set_xlabel("X")
+        ax.set_ylabel("Y")
+        ax.set_zlabel("Z")
+        ax.set_xlim([-15, 15])
+        ax.set_ylim([-15, 15])
+        ax.set_zlim([0, 10])
+        ax.view_init(elev=30, azim=frame)
 
-# Make predictions
-y_pred = model.predict(X_test)
+    # Create an animation
+    ani = FuncAnimation(fig, animate, frames=np.arange(0, 360), interval=50)
 
-# Evaluate the model
-mse = mean_squared_error(y_test, y_pred)
-print(f"Mean Squared Error: {mse:.4f}")
+    # Display the animation in Streamlit
+    st.pyplot(fig)
+
+
 
     
 
