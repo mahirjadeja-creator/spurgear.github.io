@@ -2,7 +2,7 @@ import streamlit as st
 import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
-from matplotlib.animation import FuncAnimation
+import time
 
 # Function to draw a spur gear
 def draw_gear(ax, radius, thickness, num_teeth, angle):
@@ -15,19 +15,19 @@ def draw_gear(ax, radius, thickness, num_teeth, angle):
     tooth_height = 0.2
     for i in range(num_teeth):
         x_tooth = [
-            x_outer[i], 
-            x_outer[i] * 0.8, 
-            x_outer[i] * 0.8, 
-            x_outer[i], 
+            x_outer[i],
+            x_outer[i] * 0.8,
+            x_outer[i] * 0.8,
+            x_outer[i],
             x_outer[i] * 1.1,
             x_outer[i] * 1.1,
             x_outer[i],
         ]
         y_tooth = [
-            y_outer[i], 
-            y_outer[i], 
-            y_outer[i] + tooth_height, 
-            y_outer[i] + tooth_height, 
+            y_outer[i],
+            y_outer[i],
+            y_outer[i] + tooth_height,
+            y_outer[i] + tooth_height,
             y_outer[i],
             y_outer[i] - tooth_height,
             y_outer[i] - tooth_height,
@@ -38,7 +38,7 @@ def draw_gear(ax, radius, thickness, num_teeth, angle):
     ax.bar3d(x_outer, y_outer, 0, 0.1, 0.1, thickness, shade=True, color='gray')
 
 # Streamlit layout
-st.title("Real-Time Rotation of Spur Gears")
+st.title("Real-Time Animation of Spur Gears")
 
 # User inputs for gear parameters
 radius = st.slider("Gear Radius (mm)", 1, 500, 100)
@@ -46,12 +46,13 @@ thickness = st.slider("Gear Thickness (mm)", 0.1, 10.0, 1.0)
 num_teeth = st.slider("Number of Teeth", 5, 100, 20)
 
 # Create a placeholder for the figure
-fig, ax = plt.subplots(subplot_kw={'projection': '3d'}, figsize=(8, 6))
+fig = plt.figure(figsize=(8, 6))
+ax = fig.add_subplot(111, projection='3d')
 
-# Animation function
-def animate(frame):
+# Animation loop
+angle = 0
+while True:
     ax.clear()
-    angle = frame * 0.1  # Rotation speed
     draw_gear(ax, radius, thickness, num_teeth, angle)
     ax.set_title("3D Animation of Spur Gears")
     ax.set_xlabel("X")
@@ -60,13 +61,19 @@ def animate(frame):
     ax.set_xlim([-600, 600])
     ax.set_ylim([-600, 600])
     ax.set_zlim([0, 10])
-    ax.view_init(elev=30, azim=frame)
+    ax.view_init(elev=30, azim=angle)
 
-# Create an animation
-ani = FuncAnimation(fig, animate, frames=np.arange(0, 360), interval=50)
+    # Update the angle for rotation
+    angle += 0.1  # Rotation speed
+    if angle >= 360:
+        angle = 0
 
-# Display the animation in Streamlit
-st.pyplot(fig)
+    # Display the updated plot
+    st.pyplot(fig)
+
+    # Pause for a moment to create animation effect
+    time.sleep(0.05)  # Adjust this for speed of rotation
+
 
 
 
