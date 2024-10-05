@@ -62,8 +62,6 @@ if st.button("Predict Wear Rate"):
     wear_rate = predict_wear_rate(radius, num_teeth, material_strength, speed, load, torque, temperature)
     st.success(f"Predicted Wear Rate: {wear_rate:.4f} (arbitrary units)")
 
-
-
 # Split the data into training and test sets
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
