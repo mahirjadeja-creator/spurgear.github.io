@@ -22,6 +22,12 @@ df = pd.DataFrame(data)
 # Features (X) and target (y)
 X = df.drop(columns=['wear_rate'])
 y = df['wear_rate']
+# New real-time data for a specific gear
+new_gear_data = np.array([[200, 50, 600, 1500, 300, 200, 100]])  # Example input
+
+# Predict wear rate
+predicted_wear_rate = model.predict(new_gear_data)
+print(f"Predicted Wear Rate: {predicted_wear_rate[0]:.4f}")
 
 # Split the data into training and test sets
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
